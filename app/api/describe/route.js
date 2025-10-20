@@ -1,10 +1,11 @@
 export async function POST(req) {
   try {
-    const {
-      property_type="Apartment", area_m2=85, bedrooms=2, bathrooms=null,
-      city="Larnaca", year_built=null, features=[], highlights="",
-      tone="Sachlich", audience="Käufer", language="de",
-    } = await req.json();
+    const input = await req.json(); // 1. einmal komplett lesen
+const {
+  property_type="Apartment", area_m2=85, bedrooms=2, bathrooms=null,
+  city="Larnaca", year_built=null, features=[], highlights="",
+  tone="Sachlich", audience="Käufer", language="de",
+} = input; // 2. Werte aus input holen
 
     const systemPrompt = `Du bist ein Assistent, der Immobilienbeschreibungen schreibt.
 - Nur Informationen verwenden, die im Faktenblock stehen.
@@ -57,7 +58,14 @@ Keine Fakten erfinden. Fehlende Angaben weglassen.`;
     }
 
     const data = await resp.json();
-    const text = data?.choices?.[0]?.message?.content?.trim() || "";
+    // Speichern in Supabase
+const { error } = await supabase.from("descriptions").insert({
+  payload: input,
+  text,
+});
+if (error) {
+  console.error("Supabase insert error:", error.message);
+}
     return new Response(JSON.stringify({ description: text }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { "Content-Type": "application/json" } });
