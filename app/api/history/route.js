@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-
 export const runtime = "nodejs";
 
 export async function GET() {
